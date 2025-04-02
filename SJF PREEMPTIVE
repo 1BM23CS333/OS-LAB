@@ -1,0 +1,67 @@
+#include <stdio.h>
+
+struct Process {
+    int id, at, bt, rt, ct, tat, wt;
+};
+
+int findShortestRemaining(struct Process p[], int n, int time) {
+    int shortest = -1, minRt = 9999;
+    for (int i = 0; i < n; i++) {
+        if (p[i].at <= time && p[i].rt > 0 && p[i].rt < minRt) {
+            minRt = p[i].rt;
+            shortest = i;
+        }
+    }
+    return shortest;
+}
+
+void sjfPreemptive(struct Process p[], int n) {
+    int completed = 0, time = 0;
+    
+    while (completed < n) {
+        int shortest = findShortestRemaining(p, n, time);
+        
+        if (shortest == -1) {
+            time++;
+            continue;
+        }
+        
+        p[shortest].rt--;
+        time++;
+        
+        if (p[shortest].rt == 0) {
+            completed++;
+            p[shortest].ct = time;
+            p[shortest].tat = p[shortest].ct - p[shortest].at;
+            p[shortest].wt = p[shortest].tat - p[shortest].bt;
+        }
+    }
+}
+
+void displayProcesses(struct Process p[], int n) {
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n",
+               p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process p[n];
+
+    for (int i = 0; i < n; i++) {
+        p[i].id = i + 1;
+        printf("Enter AT and BT for Process %d: ", i + 1);
+        scanf("%d %d", &p[i].at, &p[i].bt);
+        p[i].rt = p[i].bt;
+    }
+
+    sjfPreemptive(p, n);
+    displayProcesses(p, n);
+
+    return 0;
+}
