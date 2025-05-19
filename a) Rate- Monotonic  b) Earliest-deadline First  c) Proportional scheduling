@@ -1,0 +1,102 @@
+#include <stdio.h> #include <stdlib.h>
+
+#define MAX 10
+
+typedef struct
+{
+    int pid;
+    int execution_time;
+    int period;
+    int deadline;
+} Process;
+
+void rateMonotonic(Process processes[], int n)
+{
+    printf("\nRate-Monotonic Scheduling:\n");
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (processes[i].period > processes[j].period)
+            {
+                Process temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < n; i++)
+    {
+        printf("Process %d executes with period %d\n", processes[i].pid, processes[i].period);
+    }
+}
+
+void earliestDeadlineFirst(Process processes[], int n)
+{
+    printf("\nEarliest Deadline First Scheduling:\n");
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (processes[i].deadline > processes[j].deadline)
+            {
+                Process temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < n; i++)
+    {
+        printf("Process %d executes with deadline %d\n", processes[i].pid, processes[i].deadline);
+    }
+}
+
+void proportionalScheduling(Process processes[], int n)
+{
+    printf("\nProportional Scheduling:\n");
+    int total_execution = 0;
+    for (int i = 0; i < n; i++) total_execution += processes[i].execution_time;
+    for (int i = 0; i < n; i++)
+    {
+        float share = ((float)processes[i].execution_time / total_execution) * 100;
+        printf("Process %d gets %.2f%% of CPU time\n", processes[i].pid, share);
+    }
+}
+
+int main()
+{
+    int n, choice;
+    Process processes[MAX];
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++)
+    {
+        printf("Enter Process ID, Execution Time, Period, and Deadline: ");
+        scanf("%d %d %d %d", &processes[i].pid, &processes[i].execution_time, &processes[i].period, &processes[i].deadline);
+    }
+
+    printf("\nChoose a scheduling algorithm:\n");
+    printf("1. Rate-Monotonic Scheduling\n");
+    printf("2. Earliest Deadline First Scheduling\n");
+    printf("3. Proportional Scheduling\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice)
+    {
+    case 1:
+        rateMonotonic(processes, n);
+        break;
+    case 2:
+        earliestDeadlineFirst(processes, n);
+        break;
+    case 3:
+        proportionalScheduling(processes, n);
+        break;
+    default:
+        printf("Invalid choice!\n");
+    }
+
+    return 0;
+}
