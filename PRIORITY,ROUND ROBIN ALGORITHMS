@@ -1,7 +1,8 @@
 #include <stdio.h>
 
 struct Process {
-    int id, at, bt, ct, tat, wt, priority, remaining_bt;
+    int id, at, bt, ct, tat, wt, priority;
+    int remaining_bt, original_bt;
 };
 
 void sortByArrival(struct Process p[], int n) {
@@ -33,7 +34,7 @@ void priorityNonPreemptive(struct Process p[], int n) {
             time += p[index].bt;
             p[index].ct = time;
             p[index].tat = p[index].ct - p[index].at;
-            p[index].wt = p[index].tat - p[index].bt;
+            p[index].wt = p[index].tat - p[index].original_bt;
             p[index].bt = 0;
             completed++;
         } else {
@@ -61,7 +62,7 @@ void priorityPreemptive(struct Process p[], int n) {
             if (p[index].remaining_bt == 0) {
                 p[index].ct = time;
                 p[index].tat = p[index].ct - p[index].at;
-                p[index].wt = p[index].tat - p[index].bt;
+                p[index].wt = p[index].tat - p[index].original_bt;
                 completed++;
             }
         } else {
@@ -75,27 +76,32 @@ void roundRobin(struct Process p[], int n, int quantum) {
     int time = 0, completed = 0, i = 0;
     for (int i = 0; i < n; i++) p[i].remaining_bt = p[i].bt;
     while (completed < n) {
-        if (p[i].at <= time && p[i].remaining_bt > 0) {
-            if (p[i].remaining_bt <= quantum) {
-                time += p[i].remaining_bt;
-                p[i].remaining_bt = 0;
-                p[i].ct = time;
-                p[i].tat = p[i].ct - p[i].at;
-                p[i].wt = p[i].tat - p[i].bt;
-                completed++;
-            } else {
-                time += quantum;
-                p[i].remaining_bt -= quantum;
+        int executed = 0;
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= time && p[i].remaining_bt > 0) {
+                executed = 1;
+                if (p[i].remaining_bt <= quantum) {
+                    time += p[i].remaining_bt;
+                    p[i].remaining_bt = 0;
+                    p[i].ct = time;
+                    p[i].tat = p[i].ct - p[i].at;
+                    p[i].wt = p[i].tat - p[i].original_bt;
+                    completed++;
+                } else {
+                    p[i].remaining_bt -= quantum;
+                    time += quantum;
+                }
             }
         }
-        i = (i + 1) % n;
+        if (!executed) time++;
     }
 }
 
 void display(struct Process p[], int n) {
-    printf("ID\tAT\tBT\tCT\tTAT\tWT\n");
+    printf("\nID\tAT\tBT\tCT\tTAT\tWT\n");
     for (int i = 0; i < n; i++) {
-        printf("%d\t%d\t%d\t%d\t%d\t%d\n", p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n",
+               p[i].id, p[i].at, p[i].original_bt, p[i].ct, p[i].tat, p[i].wt);
     }
 }
 
@@ -103,18 +109,27 @@ int main() {
     int n, choice, quantum;
     printf("Enter number of processes: ");
     scanf("%d", &n);
+
     struct Process p[n];
+
     for (int i = 0; i < n; i++) {
         p[i].id = i + 1;
         printf("Enter AT, BT, Priority for P%d: ", i + 1);
         scanf("%d %d %d", &p[i].at, &p[i].bt, &p[i].priority);
+        p[i].original_bt = p[i].bt;
     }
-    printf("Choose Scheduling Algorithm:\n1. Priority (Non-Preemptive)\n2. Priority (Preemptive)\n3. Round Robin\n");
+
+    printf("\nChoose Scheduling Algorithm:\n");
+    printf("1. Priority (Non-Preemptive)\n");
+    printf("2. Priority (Preemptive)\n");
+    printf("3. Round Robin\n");
     scanf("%d", &choice);
+
     if (choice == 3) {
         printf("Enter Time Quantum: ");
         scanf("%d", &quantum);
     }
+
     switch (choice) {
         case 1:
             priorityNonPreemptive(p, n);
@@ -129,6 +144,8 @@ int main() {
             printf("Invalid choice\n");
             return 0;
     }
+
     display(p, n);
+
     return 0;
 }
